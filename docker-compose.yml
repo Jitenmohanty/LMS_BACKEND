@@ -1,0 +1,32 @@
+
+# version: '3.8'
+# 
+# services:
+#   mongodb:
+#     image: mongo:7
+#     container_name: learning-platform-db
+#     restart: always
+#     ports:
+#       - "27017:27017"
+#     volumes:
+#       - mongodb_data:/data/db
+#     environment:
+#       MONGO_INITDB_ROOT_USERNAME: admin
+#       MONGO_INITDB_ROOT_PASSWORD: password
+# 
+#   backend:
+#     build: .
+#     container_name: learning-platform-backend
+#     restart: always
+#     ports:
+#       - "5000:5000"
+#     depends_on:
+#       - mongodb
+#     environment:
+#       NODE_ENV: production
+#       MONGODB_URI: mongodb://admin:password@mongodb:27017/learning-platform?authSource=admin
+#     volumes:
+#       - ./logs:/app/logs
+# 
+# volumes:
+#   mongodb_data:
