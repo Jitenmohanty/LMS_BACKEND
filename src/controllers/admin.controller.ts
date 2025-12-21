@@ -7,6 +7,7 @@ import { ApiResponse } from '../utils/apiResponse';
 import User from '../models/User';
 import Course from '../models/Course';
 import Payment from '../models/Payment';
+import Progress from '../models/Progress';
 
 export class AdminController {
   // User Management
@@ -205,8 +206,22 @@ export class AdminController {
       user.purchasedCourses.push(courseId as any);
       await user.save();
 
+      // Create initial progress record so it shows up in dashboard
+      await Progress.create({
+        user: userId,
+        course: courseId,
+        completedVideos: [],
+        progressPercentage: 0
+      });
+
       // Update enrollment count
       course.enrollmentCount += 1;
+      
+      // Auto-publish if draft (as requested)
+      if (course.status === 'draft') {
+        course.status = 'published';
+      }
+      
       await course.save();
 
       ApiResponse.success(res, null, 'Course access granted successfully');
@@ -233,6 +248,9 @@ export class AdminController {
       // Revoke Access
       user.purchasedCourses = user.purchasedCourses.filter(id => id.toString() !== courseId);
       await user.save();
+
+      // Remove progress record so it disappears from dashboard
+      await Progress.findOneAndDelete({ user: userId, course: courseId });
 
       // Update enrollment count (ensure strictly non-negative)
       if (course.enrollmentCount > 0) {

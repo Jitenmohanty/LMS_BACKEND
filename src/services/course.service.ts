@@ -5,11 +5,12 @@ import Course from '../models/Course';
 import { CourseStatus, CourseLevel } from '../types';
 
 export class CourseService {
-  async createCourse(data: any, instructorId: string) {
+  async createCourse(data: any, instructorId: string, userRole: string) {
+    const status = userRole === 'admin' ? 'published' : 'draft';
     const course = await Course.create({
       ...data,
       instructor: instructorId,
-      status: 'draft'
+      status
     });
     return course;
   }

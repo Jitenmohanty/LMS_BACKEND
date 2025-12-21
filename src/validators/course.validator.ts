@@ -9,7 +9,8 @@ export const createCourseSchema = z.object({
   price: z.number().min(0, 'Price must be positive'),
   category: z.string().min(2, 'Category is required'),
   level: z.enum(['beginner', 'intermediate', 'advanced']),
-  isFree: z.boolean().optional()
+  isFree: z.boolean().optional(),
+  status: z.enum(['draft', 'published', 'archived']).optional()
 });
 
 export const updateCourseSchema = createCourseSchema.partial();

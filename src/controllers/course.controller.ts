@@ -11,7 +11,7 @@ const courseService = new CourseService();
 export class CourseController {
   async createCourse(req: AuthRequest, res: Response) {
     try {
-      const course = await courseService.createCourse(req.body, req.user!._id);
+      const course = await courseService.createCourse(req.body, req.user!._id, req.user!.role);
       ApiResponse.success(res, { course }, 'Course created successfully', 201);
     } catch (error: any) {
       ApiResponse.error(res, error.message, 400);
@@ -37,7 +37,26 @@ export class CourseController {
         filters.ignoreStatusDefault = true;
       }
       const courses = await courseService.getAllCourses(filters);
-      ApiResponse.success(res, { courses }, 'Courses retrieved successfully');
+
+      // Inject isEnrolled status
+      const coursesWithStatus = courses.map((course: any) => {
+        let isEnrolled = false;
+        
+        // DEBUG LOGGING
+        // console.log('Checking Course:', course.title, course._id.toString());
+        if (req.user) {
+           // console.log('User found:', req.user._id);
+           // console.log('User Purchased:', req.user.purchasedCourses);
+           if (req.user.purchasedCourses) {
+             const userIdString = req.user.purchasedCourses.map((id: any) => id.toString());
+             isEnrolled = userIdString.includes(course._id.toString());
+           }
+        }
+        
+        return { ...course.toObject(), isEnrolled };
+      });
+
+      ApiResponse.success(res, { courses: coursesWithStatus }, 'Courses retrieved successfully');
     } catch (error: any) {
       ApiResponse.error(res, error.message);
     }
@@ -64,6 +83,16 @@ export class CourseController {
     try {
       const course = await courseService.updateCourse(req.params.id, req.body, req.user!._id, req.user!.role);
       ApiResponse.success(res, { course }, 'Course updated successfully');
+    } catch (error: any) {
+      ApiResponse.error(res, error.message, 400);
+    }
+  }
+
+  async addVideo(req: AuthRequest, res: Response) {
+    try {
+      const { id, moduleId } = req.params;
+      const course = await courseService.addVideoToModule(id, moduleId, req.body, req.user!._id, req.user!.role);
+      ApiResponse.success(res, { course }, 'Video added successfully', 201);
     } catch (error: any) {
       ApiResponse.error(res, error.message, 400);
     }

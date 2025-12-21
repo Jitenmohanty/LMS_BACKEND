@@ -19,5 +19,6 @@ router.post('/', authMiddleware, roleMiddleware(['admin']), validateBody(createC
 router.put('/:id', authMiddleware, roleMiddleware(['admin']), validateBody(updateCourseSchema), courseController.updateCourse);
 router.delete('/:id', authMiddleware, roleMiddleware(['admin']), courseController.deleteCourse);
 router.post('/:id/modules', authMiddleware, roleMiddleware(['admin']), courseController.addModule);
+router.post('/:id/modules/:moduleId/videos', authMiddleware, roleMiddleware(['admin']), courseController.addVideo);
 
 export default router;
