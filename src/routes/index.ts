@@ -12,6 +12,7 @@ import uploadRoutes from './upload.routes';
 import subscriptionRoutes from './subscription.routes';
 import userRoutes from './user.routes';
 import reviewRoutes from './review.routes';
+import certificateRoutes from './certificate.routes';
 
 const router = Router();
 
@@ -25,5 +26,6 @@ router.use('/upload', uploadRoutes);
 router.use('/subscriptions', subscriptionRoutes);
 router.use('/users', userRoutes);
 router.use('/reviews', reviewRoutes);
+router.use('/certificates', certificateRoutes);
 
 export default router;

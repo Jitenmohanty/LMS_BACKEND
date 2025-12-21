@@ -122,16 +122,17 @@ export class UserController {
         if (!p.course) return;
 
         // Certificates
-        if (p.progressPercentage === 100) {
+        if (p.progressPercentage >= 100) {
           completedCourses++;
         }
 
         // Average Completion
-        totalProgress += p.progressPercentage;
+        const percentage = Math.min(p.progressPercentage, 100);
+        totalProgress += percentage;
 
         // Activity (Inferred)
         recentActivity.push({
-          type: p.progressPercentage === 100 ? 'Completed course' : 'In Progress',
+          type: p.progressPercentage >= 100 ? 'Completed course' : 'In Progress',
           courseTitle: p.course.title,
           date: p.updatedAt
         });

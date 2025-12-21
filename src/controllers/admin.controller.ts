@@ -38,6 +38,22 @@ export class AdminController {
     }
   }
 
+  async getUserById(req: AuthRequest, res: Response) {
+    try {
+      const user = await User.findById(req.params.userId)
+        .select('-password -refreshTokens')
+        .populate('purchasedCourses', 'title thumbnail price');
+
+      if (!user) {
+        return ApiResponse.error(res, 'User not found', 404);
+      }
+
+      ApiResponse.success(res, { user });
+    } catch (error: any) {
+      ApiResponse.error(res, error.message);
+    }
+  }
+
   async blockUser(req: AuthRequest, res: Response) {
     try {
       const user = await User.findByIdAndUpdate(
@@ -166,6 +182,65 @@ export class AdminController {
         recentUsers,
         topCourses
       });
+    } catch (error: any) {
+      ApiResponse.error(res, error.message);
+    }
+  }
+  async grantCourseAccess(req: AuthRequest, res: Response) {
+    try {
+      const { userId, courseId } = req.params;
+
+      const user = await User.findById(userId);
+      if (!user) return ApiResponse.error(res, 'User not found', 404);
+
+      const course = await Course.findById(courseId);
+      if (!course) return ApiResponse.error(res, 'Course not found', 404);
+
+      // Check if already enrolled
+      if (user.purchasedCourses.includes(courseId as any)) {
+        return ApiResponse.error(res, 'User already enrolled in this course', 400);
+      }
+
+      // Grant Access
+      user.purchasedCourses.push(courseId as any);
+      await user.save();
+
+      // Update enrollment count
+      course.enrollmentCount += 1;
+      await course.save();
+
+      ApiResponse.success(res, null, 'Course access granted successfully');
+    } catch (error: any) {
+      ApiResponse.error(res, error.message);
+    }
+  }
+
+  async revokeCourseAccess(req: AuthRequest, res: Response) {
+    try {
+      const { userId, courseId } = req.params;
+
+      const user = await User.findById(userId);
+      if (!user) return ApiResponse.error(res, 'User not found', 404);
+
+      const course = await Course.findById(courseId);
+      if (!course) return ApiResponse.error(res, 'Course not found', 404);
+
+      // Check if enrolled
+      if (!user.purchasedCourses.includes(courseId as any)) {
+        return ApiResponse.error(res, 'User is not enrolled in this course', 400);
+      }
+
+      // Revoke Access
+      user.purchasedCourses = user.purchasedCourses.filter(id => id.toString() !== courseId);
+      await user.save();
+
+      // Update enrollment count (ensure strictly non-negative)
+      if (course.enrollmentCount > 0) {
+        course.enrollmentCount -= 1;
+        await course.save();
+      }
+
+      ApiResponse.success(res, null, 'Course access revoked successfully');
     } catch (error: any) {
       ApiResponse.error(res, error.message);
     }

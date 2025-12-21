@@ -14,9 +14,12 @@ router.use(authMiddleware, roleMiddleware(['admin']));
 
 // User Management
 router.get('/users', adminController.getAllUsers);
+router.get('/users/:userId', adminController.getUserById);
 router.put('/users/:userId/block', adminController.blockUser);
 router.put('/users/:userId/unblock', adminController.unblockUser);
 router.put('/users/:userId/role', adminController.changeUserRole);
+router.post('/users/:userId/courses/:courseId/grant', adminController.grantCourseAccess);
+router.post('/users/:userId/courses/:courseId/revoke', adminController.revokeCourseAccess);
 
 // Payment Management
 router.get('/payments', adminController.getAllPayments);

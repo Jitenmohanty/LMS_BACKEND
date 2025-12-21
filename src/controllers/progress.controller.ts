@@ -32,6 +32,31 @@ export class ProgressController {
     }
   }
 
+  async updateHeartbeat(req: AuthRequest, res: Response) {
+    try {
+      const { courseId, videoId } = req.params;
+      const { timestamp } = req.body;
+      const progress = await progressService.updateHeartbeat(
+        req.user!._id,
+        courseId,
+        videoId,
+        timestamp
+      );
+      ApiResponse.success(res, { progress }, 'Heartbeat updated');
+    } catch (error: any) {
+      ApiResponse.error(res, error.message);
+    }
+  }
+
+  async getContinueLearning(req: AuthRequest, res: Response) {
+    try {
+      const courses = await progressService.getContinueLearning(req.user!._id);
+      ApiResponse.success(res, { courses });
+    } catch (error: any) {
+      ApiResponse.error(res, error.message);
+    }
+  }
+
   async getCourseProgress(req: AuthRequest, res: Response) {
     try {
       const progress = await progressService.getCourseProgress(

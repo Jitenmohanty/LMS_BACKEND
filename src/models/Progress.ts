@@ -8,6 +8,7 @@ export interface IProgressDoc extends Document {
   course: mongoose.Types.ObjectId;
   completedVideos: string[];
   lastWatchedVideo?: string;
+  lastVideoTimestamp?: number;
   progressPercentage: number;
   createdAt: Date;
   updatedAt: Date;
@@ -19,6 +20,7 @@ const progressSchema = new Schema<IProgressDoc>(
     course: { type: Schema.Types.ObjectId, ref: 'Course', required: true },
     completedVideos: [{ type: String }],
     lastWatchedVideo: String,
+    lastVideoTimestamp: { type: Number, default: 0 }, // Timestamp in seconds
     progressPercentage: { type: Number, default: 0 }
   },
   { timestamps: true }

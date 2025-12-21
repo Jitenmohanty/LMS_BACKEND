@@ -22,9 +22,9 @@ const consoleFormat = combine(
 // MongoDB Transport
 const mongoTransport = new winston.transports.MongoDB({
   level: 'info',
-  db: process.env.MONGO_URI || 'mongodb://localhost:27017/lms_db',
+  db: process.env.MONGODB_URI || 'mongodb://localhost:27017/lms_db',
   collection: 'logs',
-  options: { useUnifiedTopology: true },
+  options: {},
   format: combine(timestamp(), json())
 });
 
@@ -45,7 +45,7 @@ const logger = winston.createLogger({
 });
 
 // Add MongoDB transport only if URI is present (and not in test mode)
-if (process.env.MONGO_URI && process.env.NODE_ENV !== 'test') {
+if (process.env.MONGODB_URI && process.env.NODE_ENV !== 'test') {
   logger.add(mongoTransport);
 }
 

@@ -34,7 +34,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 
 // Rate Limiting
-app.use('/api/', limiter);
+// app.use('/api/', limiter);
 
 // Routes
 app.use('/api', routes);
