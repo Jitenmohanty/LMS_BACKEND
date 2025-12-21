@@ -56,9 +56,9 @@ export class UploadService {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
           folder: 'learning-platform/certificates',
-          resource_type: 'raw', // 'raw' is usually best for PDFs to keep them as is
-          public_id: fileName,
-          format: 'pdf',
+          resource_type: 'raw',
+          public_id: fileName, // fileName should now have .pdf extension
+          // format: 'pdf', // Removed: Not applicable for resource_type: 'raw' in this context usually
           content_type: 'application/pdf'
         },
         (error, result) => {
@@ -73,6 +73,31 @@ export class UploadService {
       );
 
       Readable.from(buffer).pipe(uploadStream);
+    });
+  }
+
+  async uploadPDFFromPath(filePath: string, fileName: string): Promise<{ url: string; publicId: string }> {
+    return new Promise((resolve, reject) => {
+      cloudinary.uploader.upload(
+        filePath,
+        {
+          folder: 'learning-platform/certificates',
+          resource_type: 'raw', // Force raw to prevent Cloudinary from processing as image
+          public_id: fileName,
+          use_filename: true,
+          unique_filename: false,
+          overwrite: true
+        },
+        (error, result) => {
+          if (error) return reject(error);
+          if (!result) return reject(new Error('Cloudinary upload failed'));
+          
+          resolve({
+            url: result.secure_url,
+            publicId: result.public_id
+          });
+        }
+      );
     });
   }
 }

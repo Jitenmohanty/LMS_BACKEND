@@ -168,4 +168,4 @@ export class AuthService {
       await user.save();
     }
   }
-} // End Class
+}

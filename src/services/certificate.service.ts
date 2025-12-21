@@ -4,6 +4,8 @@ import User from '../models/User';
 import Course from '../models/Course';
 import crypto from 'crypto';
 import { UploadService } from './upload.service';
+import fs from 'fs';
+import path from 'path';
 
 export class CertificateService {
   async createCertificate(userId: string, courseId: string) {
@@ -24,9 +26,15 @@ export class CertificateService {
     // Generate PDF Buffer
     const pdfBuffer = await this.generatePDFBuffer(user.toObject(), course.toObject(), certificateId, new Date());
 
+    // DEBUG: Save locally to verify integrity
+    const localPath = path.join(process.cwd(), 'certificates', `certificate-${certificateId}.pdf`);
+    fs.writeFileSync(localPath, pdfBuffer);
+    console.log(`Certificate saved locally to: ${localPath}`);
+
     // Upload to Cloudinary
     const uploadService = new UploadService();
-    const { url } = await uploadService.uploadPDF(pdfBuffer, `certificate-${certificateId}`);
+    // Use local file for upload to ensure robustness
+    const { url } = await uploadService.uploadPDFFromPath(localPath, `certificate-${certificateId}.pdf`);
 
     const certificate = await Certificate.create({
       user: userId,
@@ -41,51 +49,62 @@ export class CertificateService {
 
   private generatePDFBuffer(user: any, course: any, certificateId: string, date: Date): Promise<Buffer> {
     return new Promise((resolve, reject) => {
-      const doc = new PDFDocument({
-        layout: 'landscape',
-        size: 'A4',
-      });
+      try {
+        const doc = new PDFDocument({
+          layout: 'landscape',
+          size: 'A4',
+          margin: 0 // Reset margins for full drawing control
+        });
 
-      const buffers: Buffer[] = [];
-      doc.on('data', buffers.push.bind(buffers));
-      doc.on('end', () => {
-        const pdfData = Buffer.concat(buffers);
-        resolve(pdfData);
-      });
+        const buffers: Buffer[] = [];
+        doc.on('data', (chunk) => buffers.push(chunk));
+        doc.on('end', () => {
+          const pdfData = Buffer.concat(buffers);
+          resolve(pdfData);
+        });
+        doc.on('error', (err) => reject(err));
 
-      // Background Border
-      doc.rect(20, 20, doc.page.width - 40, doc.page.height - 40)
-         .stroke('#CCAA00'); // Gold-ish border
-      
-      // Inner Border
-      doc.rect(40, 40, doc.page.width - 80, doc.page.height - 80)
-         .stroke('#CCAA00');
+        // Background Border
+        doc.rect(20, 20, 801.89, 555.28) // A4 Landscape dims approx (841.89 x 595.28) - margins
+           .stroke('#CCAA00'); 
+        
+        // Inner Border
+        doc.rect(40, 40, 761.89, 515.28)
+           .stroke('#CCAA00');
 
-      // Header
-      doc.fontSize(40).font('Helvetica-Bold').text('Certificate of Completion', 0, 100, { align: 'center' });
+        // Content
+        const centerX = 841.89 / 2;
+        
+        doc.moveDown(4);
+        doc.fontSize(40).font('Helvetica-Bold').text('Certificate of Completion', { align: 'center' });
 
-      // Body
-      doc.moveDown();
-      doc.fontSize(20).font('Helvetica').text('This is to certify that', { align: 'center' });
+        doc.moveDown();
+        doc.fontSize(20).font('Helvetica').text('This is to certify that', { align: 'center' });
 
-      doc.moveDown(1.5);
-      doc.fontSize(30).font('Helvetica-Bold').text(user.name, { align: 'center', underline: true });
+        doc.moveDown(1.5);
+        doc.fontSize(30).font('Helvetica-Bold').text(user.name, { align: 'center', underline: true });
 
-      doc.moveDown(1.5);
-      doc.fontSize(20).font('Helvetica').text('has successfully completed the course', { align: 'center' });
+        doc.moveDown(1.5);
+        doc.fontSize(20).font('Helvetica').text('has successfully completed the course', { align: 'center' });
 
-      doc.moveDown(1.5);
-      doc.fontSize(25).font('Helvetica-Bold').text(course.title, { align: 'center' });
+        doc.moveDown(1.5);
+        doc.fontSize(25).font('Helvetica-Bold').text(course.title, { align: 'center' });
 
-      // Footer
-      doc.moveDown(4);
-      doc.fontSize(15).text(`Date: ${date.toLocaleDateString()}`, 100, 450);
-      doc.text(`Certificate ID: ${certificateId}`, 500, 450, { align: 'right' });
+        // Footer
+        doc.fontSize(12); // Slightly smaller font for footer
+        doc.text(`Date: ${date.toLocaleDateString()}`, 60, 500);
+        
+        // Right align Certificate ID. Page width is approx 841.
+        // We set x to start further right, or use the width/align options
+        doc.text(`Certificate ID: ${certificateId}`, 500, 500, { width: 300, align: 'right' });
 
-      // Signature Line
-      doc.moveTo(100, 440).lineTo(300, 440).stroke();
+        // Signature Line
+        doc.moveTo(100, 490).lineTo(300, 490).stroke();
 
-      doc.end();
+        doc.end();
+      } catch (error) {
+        reject(error);
+      }
     });
   }
 

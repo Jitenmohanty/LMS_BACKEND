@@ -2,9 +2,9 @@
 // FILE: src/controllers/auth.controller.ts
 // ============================================================================
 import { Request, Response } from 'express';
-import { AuthService } from '../services/auth.service';
 import { ApiResponse } from '../utils/apiResponse';
 import { AuthRequest } from '../types';
+import { AuthService } from '../services/auth.service';
 
 const authService = new AuthService();
 
