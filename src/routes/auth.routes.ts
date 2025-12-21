@@ -18,6 +18,11 @@ router.post('/login', authLimiter, validateBody(loginSchema), authController.log
 router.get('/me', authMiddleware, authController.getMe);
 router.post('/refresh', authController.refresh);
 router.post('/logout', authMiddleware, authController.logout);
+router.post('/verify-email', authController.verifyEmail);
+router.post('/resend-otp', authLimiter, authController.resendOTP);
+router.post('/forgot-password', authLimiter, authController.forgotPassword);
+router.post('/reset-password', authLimiter, authController.resetPassword);
+router.post('/change-password', authMiddleware, authController.changePassword);
 
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 router.get('/google/callback', passport.authenticate('google', { session: false }), async (req: any, res) => {

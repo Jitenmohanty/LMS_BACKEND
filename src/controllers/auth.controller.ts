@@ -104,4 +104,54 @@ export class AuthController {
       ApiResponse.error(res, error.message);
     }
   }
+
+  async verifyEmail(req: Request, res: Response) {
+    try {
+      const { email, otp } = req.body;
+      const result = await authService.verifyEmail(email, otp);
+      ApiResponse.success(res, null, result.message);
+    } catch (error: any) {
+      ApiResponse.error(res, error.message, 400);
+    }
+  }
+
+  async resendOTP(req: Request, res: Response) {
+    try {
+      const { email } = req.body;
+      const result = await authService.resendOTP(email);
+      ApiResponse.success(res, null, result.message);
+    } catch (error: any) {
+      ApiResponse.error(res, error.message, 400);
+    }
+  }
+
+  async forgotPassword(req: Request, res: Response) {
+    try {
+      const { email } = req.body;
+      const result = await authService.forgotPassword(email);
+      ApiResponse.success(res, null, result.message);
+    } catch (error: any) {
+      ApiResponse.error(res, error.message, 400);
+    }
+  }
+
+  async resetPassword(req: Request, res: Response) {
+    try {
+      const { email, otp, newPassword } = req.body;
+      const result = await authService.resetPassword(email, otp, newPassword);
+      ApiResponse.success(res, null, result.message);
+    } catch (error: any) {
+      ApiResponse.error(res, error.message, 400);
+    }
+  }
+
+  async changePassword(req: AuthRequest, res: Response) {
+    try {
+      const { oldPassword, newPassword } = req.body;
+      const result = await authService.changePassword(req.user!._id, oldPassword, newPassword);
+      ApiResponse.success(res, null, result.message);
+    } catch (error: any) {
+      ApiResponse.error(res, error.message, 400);
+    }
+  }
 }

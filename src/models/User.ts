@@ -22,6 +22,9 @@ export interface IUserDoc extends Document {
   googleId?: string;
   refreshTokens: string[];
   isBlocked: boolean;
+  isVerified: boolean;
+  otp?: string;
+  otpExpires?: Date;
   purchasedCourses: mongoose.Types.ObjectId[];
   subscriptionPlan?: mongoose.Types.ObjectId;
   createdAt: Date;
@@ -50,6 +53,9 @@ const userSchema = new Schema<IUserDoc>(
     googleId: String,
     refreshTokens: [{ type: String }],
     isBlocked: { type: Boolean, default: false },
+    isVerified: { type: Boolean, default: false },
+    otp: { type: String, select: false },
+    otpExpires: { type: Date, select: false },
     purchasedCourses: [{ type: Schema.Types.ObjectId, ref: 'Course' }],
     subscriptionPlan: { type: Schema.Types.ObjectId, ref: 'SubscriptionPlan' }
   },
