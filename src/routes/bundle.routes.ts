@@ -6,14 +6,17 @@ import { BundleController } from '../controllers/bundle.controller';
 import { authMiddleware } from '../middlewares/auth.middleware';
 import { roleMiddleware } from '../middlewares/role.middleware';
 
+import { validateBody } from '../middlewares/validate.middleware';
+import { createBundleSchema, updateBundleSchema } from '../validators/bundle.validator';
+
 const router = Router();
 const bundleController = new BundleController();
 
 router.get('/', bundleController.getAllBundles);
 router.get('/:id', bundleController.getBundleById);
 
-router.post('/', authMiddleware, roleMiddleware(['admin']), bundleController.createBundle);
-router.put('/:id', authMiddleware, roleMiddleware(['admin']), bundleController.updateBundle);
+router.post('/', authMiddleware, roleMiddleware(['admin']), validateBody(createBundleSchema), bundleController.createBundle);
+router.put('/:id', authMiddleware, roleMiddleware(['admin']), validateBody(updateBundleSchema), bundleController.updateBundle);
 router.delete('/:id', authMiddleware, roleMiddleware(['admin']), bundleController.deleteBundle);
 
 export default router;

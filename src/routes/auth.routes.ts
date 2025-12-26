@@ -5,7 +5,7 @@ import { Router } from 'express';
 import { AuthController } from '../controllers/auth.controller';
 import { authMiddleware } from '../middlewares/auth.middleware';
 import { validateBody } from '../middlewares/validate.middleware';
-import { registerSchema, loginSchema } from '../validators/auth.validator';
+import { registerSchema, loginSchema, verifyEmailSchema, resendOTPSchema, forgotPasswordSchema, resetPasswordSchema, changePasswordSchema } from '../validators/auth.validator';
 import { authLimiter } from '../middlewares/rateLimiter.middleware';
 import passport from '../config/passport';
 import { AuthService } from '../services/auth.service';
@@ -18,11 +18,11 @@ router.post('/login', authLimiter, validateBody(loginSchema), authController.log
 router.get('/me', authMiddleware, authController.getMe);
 router.post('/refresh', authController.refresh);
 router.post('/logout', authMiddleware, authController.logout);
-router.post('/verify-email', authController.verifyEmail);
-router.post('/resend-otp', authLimiter, authController.resendOTP);
-router.post('/forgot-password', authLimiter, authController.forgotPassword);
-router.post('/reset-password', authLimiter, authController.resetPassword);
-router.post('/change-password', authMiddleware, authController.changePassword);
+router.post('/verify-email', validateBody(verifyEmailSchema), authController.verifyEmail);
+router.post('/resend-otp', authLimiter, validateBody(resendOTPSchema), authController.resendOTP);
+router.post('/forgot-password', authLimiter, validateBody(forgotPasswordSchema), authController.forgotPassword);
+router.post('/reset-password', authLimiter, validateBody(resetPasswordSchema), authController.resetPassword);
+router.post('/change-password', authMiddleware, validateBody(changePasswordSchema), authController.changePassword);
 
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 router.get('/google/callback', passport.authenticate('google', { session: false }), async (req: any, res) => {

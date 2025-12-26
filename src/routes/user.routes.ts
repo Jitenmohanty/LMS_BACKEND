@@ -3,6 +3,9 @@ import multer from 'multer';
 import { UserController } from '../controllers/user.controller';
 import { authMiddleware } from '../middlewares/auth.middleware';
 
+import { validateBody, validateParams } from '../middlewares/validate.middleware';
+import { updateProfileSchema, addToWishlistSchema } from '../validators/user.validator';
+
 const router = Router();
 const userController = new UserController();
 
@@ -26,9 +29,9 @@ router.use(authMiddleware);
 
 router.get('/dashboard', userController.getDashboardStats);
 router.get('/wishlist', userController.getWishlist);
-router.post('/wishlist/:courseId', userController.addToWishlist);
+router.post('/wishlist/:courseId', validateParams(addToWishlistSchema), userController.addToWishlist);
 router.delete('/wishlist/:courseId', userController.removeFromWishlist);
 
-router.put('/profile', upload.single('avatar'), userController.updateProfile);
+router.put('/profile', upload.single('avatar'), validateBody(updateProfileSchema), userController.updateProfile);
 
 export default router;

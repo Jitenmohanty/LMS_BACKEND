@@ -13,4 +13,17 @@ export const createCourseSchema = z.object({
   status: z.enum(['draft', 'published', 'archived']).optional()
 });
 
+export const addModuleSchema = z.object({
+  title: z.string().min(3, 'Module title must be at least 3 characters'),
+  description: z.string().optional()
+});
+
+export const addVideoSchema = z.object({
+  title: z.string().min(3, 'Video title must be at least 3 characters'),
+  videoUrl: z.string().url('Invalid video URL').or(z.string().min(1, 'Video ID/URL is required')),
+  description: z.string().optional(),
+  duration: z.number().int().positive().optional(),
+  isFree: z.boolean().optional()
+});
+
 export const updateCourseSchema = createCourseSchema.partial();
