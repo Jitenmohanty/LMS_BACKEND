@@ -13,6 +13,7 @@ import subscriptionRoutes from './subscription.routes';
 import userRoutes from './user.routes';
 import reviewRoutes from './review.routes';
 import certificateRoutes from './certificate.routes';
+import contactRoutes from './contact.routes';
 
 const router = Router();
 
@@ -27,5 +28,6 @@ router.use('/subscriptions', subscriptionRoutes);
 router.use('/users', userRoutes);
 router.use('/reviews', reviewRoutes);
 router.use('/certificates', certificateRoutes);
+router.use('/contact', contactRoutes);
 
 export default router;
