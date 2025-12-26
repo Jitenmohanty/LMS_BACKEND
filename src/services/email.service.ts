@@ -1,4 +1,7 @@
 import { Resend } from 'resend';
+import { getOtpTemplate } from '../templates/auth/otp.template';
+import { getContactAdminTemplate } from '../templates/contact/admin-notification.template';
+import { getContactUserAckTemplate } from '../templates/contact/user-ack.template';
 
 export class EmailService {
   private resend;
@@ -12,16 +15,7 @@ export class EmailService {
       ? 'Verify your Email Address' 
       : 'Password Reset Request';
     
-    // Simple HTML template
-    const html = `
-      <div style="font-family: Arial, sans-serif; padding: 20px;">
-        <h2>${type === 'verification' ? 'Email Verification' : 'Reset Password'}</h2>
-        <p>Your One-Time Password (OTP) is:</p>
-        <h1 style="color: #4A90E2; letter-spacing: 5px;">${otp}</h1>
-        <p>This OTP is valid for 10 minutes.</p>
-        <p>If you did not request this, please ignore this email.</p>
-      </div>
-    `;
+    const html = getOtpTemplate(otp, type);
 
     try {
       if (!process.env.RESEND_API_KEY) {
@@ -30,7 +24,7 @@ export class EmailService {
       }
 
       await this.resend.emails.send({
-        from: 'Learning Platform <onboarding@resend.dev>', // Default Resend testing domain, user can change to their verified domain
+        from: 'Learning Platform <onboarding@resend.dev>', // Default Resend testing domain
         to: email,
         subject: subject,
         html: html,
@@ -41,4 +35,42 @@ export class EmailService {
       // In production, you might want to throw this, but for now log it
     }
   }
+
+  async sendContactEmail(data: { firstName: string; lastName: string; email: string; subject: string; message: string }) {
+    const { firstName, lastName, email, subject, message } = data;
+    const adminEmail = process.env.ADMIN_EMAIL || 'admin@devskill.com'; // Fallback or env var
+
+    const html = getContactAdminTemplate(firstName, lastName, email, subject, message);
+
+    try {
+      if (!process.env.RESEND_API_KEY) {
+        console.warn('RESEND_API_KEY missing. Logging contact email instead:', data);
+        return;
+      }
+
+      await this.resend.emails.send({
+        from: 'Contact Form <contact@resend.dev>', // Should be a verified domain in production
+        to: adminEmail,
+        replyTo: email,
+        subject: `New Contact Submission: ${subject}`,
+        html: html,
+      });
+
+      // Send auto-reply to user
+      const userHtml = getContactUserAckTemplate(firstName, subject);
+
+      await this.resend.emails.send({
+        from: 'DevSkill Support <support@resend.dev>',
+        to: email,
+        subject: 'We received your message',
+        html: userHtml
+      });
+
+      console.log(`Contact email sent from ${email} and auto-reply sent.`);
+    } catch (error) {
+      console.error('Error sending contact email:', error);
+      throw error;
+    }
+  }
 }
+
