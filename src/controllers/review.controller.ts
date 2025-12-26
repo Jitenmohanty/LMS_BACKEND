@@ -38,4 +38,30 @@ export class ReviewController {
       ApiResponse.error(res, error.message, 400);
     }
   }
+
+  async addReply(req: AuthRequest, res: Response) {
+      try {
+          const { reviewId } = req.params;
+          const { reply } = req.body;
+          
+          if (!reply) {
+              return ApiResponse.error(res, 'Reply text is required', 400);
+          }
+
+          const review = await reviewService.addReply(reviewId, reply);
+          ApiResponse.success(res, { review }, 'Reply added successfully');
+      } catch (error: any) {
+          ApiResponse.error(res, error.message, 400);
+      }
+  }
+
+  async deleteReview(req: AuthRequest, res: Response) {
+      try {
+          const { reviewId } = req.params;
+          await reviewService.deleteReview(reviewId);
+          ApiResponse.success(res, null, 'Review deleted successfully');
+      } catch (error: any) {
+          ApiResponse.error(res, error.message, 400);
+      }
+  }
 }

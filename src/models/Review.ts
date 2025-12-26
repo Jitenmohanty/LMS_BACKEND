@@ -8,6 +8,9 @@ export interface IReviewDoc extends Document {
   course: mongoose.Types.ObjectId;
   rating: number;
   comment: string;
+  reply?: string;
+  replyAt?: Date;
+  isReplied: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -17,7 +20,10 @@ const reviewSchema = new Schema<IReviewDoc>(
     user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     course: { type: Schema.Types.ObjectId, ref: 'Course', required: true },
     rating: { type: Number, required: true, min: 1, max: 5 },
-    comment: { type: String, required: true }
+    comment: { type: String, required: true },
+    reply: { type: String },
+    replyAt: { type: Date },
+    isReplied: { type: Boolean, default: false }
   },
   { timestamps: true }
 );

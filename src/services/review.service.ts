@@ -5,12 +5,28 @@ import Review from '../models/Review';
 import Course from '../models/Course';
 import mongoose from 'mongoose';
 
+import User from '../models/User';
+
 export class ReviewService {
   async addReview(userId: string, courseId: string, rating: number, comment: string) {
     // Check if course exists
     const course = await Course.findById(courseId);
     if (!course) {
       throw new Error('Course not found');
+    }
+
+    // Check if user purchased the course
+    const user = await User.findById(userId);
+    if (!user) {
+        throw new Error('User not found');
+    }
+    
+    // Check if user is admin (admins can review any course) or if they purchased it
+    const isAdmin = user.role === 'admin';
+    const hasPurchased = user.purchasedCourses.some(id => id.toString() === courseId);
+
+    if (!isAdmin && !hasPurchased) {
+        throw new Error('You must purchase the course to leave a review');
     }
 
     // Create review
@@ -25,6 +41,32 @@ export class ReviewService {
     await this.calculateAverageRating(courseId);
 
     return review;
+  }
+
+  async addReply(reviewId: string, replyText: string) {
+    const review = await Review.findById(reviewId);
+    if (!review) {
+        throw new Error('Review not found');
+    }
+
+    review.reply = replyText;
+    review.replyAt = new Date();
+    review.isReplied = true;
+    await review.save();
+    
+    return review;
+  }
+
+  async deleteReview(reviewId: string) {
+      const review = await Review.findByIdAndDelete(reviewId);
+      if (!review) {
+          throw new Error('Review not found');
+      }
+      
+      // Recalculate average rating
+      await this.calculateAverageRating(review.course.toString());
+      
+      return review;
   }
 
   async getReviewsByCourse(courseId: string) {
