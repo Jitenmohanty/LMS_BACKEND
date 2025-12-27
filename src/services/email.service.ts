@@ -2,12 +2,34 @@ import { Resend } from 'resend';
 import { getOtpTemplate } from '../templates/auth/otp.template';
 import { getContactAdminTemplate } from '../templates/contact/admin-notification.template';
 import { getContactUserAckTemplate } from '../templates/contact/user-ack.template';
+import { getPasswordChangedTemplate } from '../templates/auth/password-changed.template';
 
 export class EmailService {
   private resend;
 
   constructor() {
     this.resend = new Resend(process.env.RESEND_API_KEY);
+  }
+
+  async sendPasswordChangeNotification(email: string, name: string) {
+    const html = getPasswordChangedTemplate(name);
+
+    try {
+      if (!process.env.RESEND_API_KEY) {
+        console.warn('RESEND_API_KEY missing. Logging password change email for:', email);
+        return;
+      }
+
+      await this.resend.emails.send({
+        from: 'Security <security@resend.dev>',
+        to: email,
+        subject: 'Your Password Has Been Changed',
+        html: html,
+      });
+      console.log(`Password change notification sent to ${email}`);
+    } catch (error) {
+      console.error('Error sending password change email:', error);
+    }
   }
 
   async sendOTP(email: string, otp: string, type: 'verification' | 'reset') {

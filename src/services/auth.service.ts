@@ -107,6 +107,8 @@ export class AuthService {
     user.otpExpires = undefined;
     await user.save();
 
+    await emailService.sendPasswordChangeNotification(user.email, user.name);
+
     return { message: 'Password reset successfully' };
   }
 
@@ -119,6 +121,8 @@ export class AuthService {
 
     user.password = newPass;
     await user.save();
+
+    await emailService.sendPasswordChangeNotification(user.email, user.name);
 
     return { message: 'Password changed successfully' };
   }
