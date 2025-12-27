@@ -62,6 +62,14 @@ const userSchema = new Schema<IUserDoc>(
   { timestamps: true }
 );
 
+userSchema.pre('save', function (next) {
+  if (!this.avatar) {
+    const name = this.name || 'User';
+    this.avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&color=fff`;
+  }
+  next();
+});
+
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password') || !this.password) return next();
   this.password = await bcrypt.hash(this.password, 12);
