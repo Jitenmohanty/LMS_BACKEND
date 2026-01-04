@@ -35,5 +35,15 @@ export class UploadController {
     }
   }
 
+  async getUploadSignature(req: AuthRequest, res: Response) {
+    try {
+      const { folder } = req.query;
+      const result = await uploadService.generateSignature((folder as string) || 'learning-platform');
+      ApiResponse.success(res, result, 'Upload signature generated');
+    } catch (error: any) {
+      ApiResponse.error(res, error.message, 400);
+    }
+  }
+
 
 }

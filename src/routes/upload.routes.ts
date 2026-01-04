@@ -22,6 +22,6 @@ router.use(authMiddleware, roleMiddleware(['admin']));
 
 router.post('/image', upload.single('file'), uploadController.uploadImage);
 router.post('/video', upload.single('file'), uploadController.uploadVideo);
-
+router.get('/signature', uploadController.getUploadSignature);
 
 export default router;
