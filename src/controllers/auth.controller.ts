@@ -107,8 +107,8 @@ export class AuthController {
 
   async verifyEmail(req: Request, res: Response) {
     try {
-      const { email, otp } = req.body;
-      const result = await authService.verifyEmail(email, otp);
+      const { email, token } = req.body;
+      const result = await authService.verifyEmail(email, token);
       ApiResponse.success(res, null, result.message);
     } catch (error: any) {
       ApiResponse.error(res, error.message, 400);
@@ -137,8 +137,8 @@ export class AuthController {
 
   async resetPassword(req: Request, res: Response) {
     try {
-      const { email, otp, newPassword } = req.body;
-      const result = await authService.resetPassword(email, otp, newPassword);
+      const { email, token, password } = req.body;
+      const result = await authService.resetPassword(email, token, password);
       ApiResponse.success(res, null, result.message);
     } catch (error: any) {
       ApiResponse.error(res, error.message, 400);
