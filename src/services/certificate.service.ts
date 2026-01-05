@@ -4,8 +4,7 @@ import User from '../models/User';
 import Course from '../models/Course';
 import crypto from 'crypto';
 import { UploadService } from './upload.service';
-import fs from 'fs';
-import path from 'path';
+
 
 export class CertificateService {
   async createCertificate(userId: string, courseId: string) {
@@ -26,15 +25,9 @@ export class CertificateService {
     // Generate PDF Buffer
     const pdfBuffer = await this.generatePDFBuffer(user.toObject(), course.toObject(), certificateId, new Date());
 
-    // DEBUG: Save locally to verify integrity
-    const localPath = path.join(process.cwd(), 'certificates', `certificate-${certificateId}.pdf`);
-    fs.writeFileSync(localPath, pdfBuffer);
-    console.log(`Certificate saved locally to: ${localPath}`);
-
     // Upload to Cloudinary
     const uploadService = new UploadService();
-    // Use local file for upload to ensure robustness
-    const { url } = await uploadService.uploadPDFFromPath(localPath, `certificate-${certificateId}.pdf`);
+    const { url } = await uploadService.uploadPDF(pdfBuffer, `certificate-${certificateId}.pdf`);
 
     const certificate = await Certificate.create({
       user: userId,
