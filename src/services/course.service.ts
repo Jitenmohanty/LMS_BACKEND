@@ -2,7 +2,9 @@
 // FILE: src/services/course.service.ts
 // ============================================================================
 import Course from '../models/Course';
+import User from '../models/User';
 import { CourseStatus, CourseLevel } from '../types';
+import { sanitizeCourseForPublic, canAccessCourseContent, isUserEnrolled } from '../utils/course.utils';
 
 export class CourseService {
   async createCourse(data: any, instructorId: string, userRole: string) {
@@ -15,7 +17,7 @@ export class CourseService {
     return course;
   }
 
-  async getAllCourses(filters: any = {}) {
+  async getAllCourses(filters: any = {}, isPublicView: boolean = true) {
     const query: any = {};
 
     if (filters.status) {
@@ -28,15 +30,62 @@ export class CourseService {
       .populate('instructor', 'name avatar')
       .sort({ createdAt: -1 });
 
+    // Sanitize course data for public view
+    if (isPublicView) {
+      return courses.map(course => sanitizeCourseForPublic(course));
+    }
+
     return courses;
   }
 
-  async getCourseById(courseId: string) {
+  async getCourseById(courseId: string, isPublicView: boolean = true) {
     const course = await Course.findById(courseId)
       .populate('instructor', 'name avatar email');
     
     if (!course) {
       throw new Error('Course not found');
+    }
+
+    // Sanitize course data for public view
+    if (isPublicView) {
+      return sanitizeCourseForPublic(course);
+    }
+
+    return course;
+  }
+
+  async getCourseContent(courseId: string, userId: string, userRole: string) {
+    const course = await Course.findById(courseId)
+      .populate('instructor', 'name avatar email');
+    
+    if (!course) {
+      throw new Error('Course not found');
+    }
+
+    // Admins can access all content
+    if (userRole === 'admin') {
+      return course;
+    }
+
+    // Free courses are accessible to everyone
+    if (course.isFree) {
+      return course;
+    }
+
+    // Check if user is the instructor
+    if (course.instructor._id.toString() === userId) {
+      return course;
+    }
+
+    // For paid courses, verify enrollment
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const enrolled = isUserEnrolled(userId, user.purchasedCourses, courseId);
+    if (!enrolled) {
+      throw new Error('You must enroll in this course to access its content');
     }
 
     return course;

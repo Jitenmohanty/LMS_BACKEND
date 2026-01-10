@@ -21,6 +21,9 @@ const courseController = new CourseController();
 router.get('/', optionalAuthMiddleware, courseController.getAllCourses);
 router.get('/:id', optionalAuthMiddleware, courseController.getCourse);
 
+// Authenticated route for course content (includes video URLs)
+router.get('/:id/content', authMiddleware, courseController.getCourseContent);
+
 // Course management (admin only)
 router.post('/', authMiddleware, roleMiddleware(['admin']), validateBody(createCourseSchema), courseController.createCourse);
 router.put('/:id', authMiddleware, roleMiddleware(['admin']), validateBody(updateCourseSchema), courseController.updateCourse);

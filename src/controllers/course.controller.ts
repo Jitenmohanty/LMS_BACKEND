@@ -36,24 +36,22 @@ export class CourseController {
         // If admin and no status specified, show all (ignore default published)
         filters.ignoreStatusDefault = true;
       }
-      const courses = await courseService.getAllCourses(filters);
+      
+      // Always use public view to sanitize data (removes video URLs)
+      const courses = await courseService.getAllCourses(filters, true);
 
       // Inject isEnrolled status
       const coursesWithStatus = courses.map((course: any) => {
         let isEnrolled = false;
         
-        // DEBUG LOGGING
-        // console.log('Checking Course:', course.title, course._id.toString());
         if (req.user) {
-           // console.log('User found:', req.user._id);
-           // console.log('User Purchased:', req.user.purchasedCourses);
            if (req.user.purchasedCourses) {
              const userIdString = req.user.purchasedCourses.map((id: any) => id.toString());
              isEnrolled = userIdString.includes(course._id.toString());
            }
         }
         
-        return { ...course.toObject(), isEnrolled };
+        return { ...course, isEnrolled };
       });
 
       ApiResponse.success(res, { courses: coursesWithStatus }, 'Courses retrieved successfully');
@@ -64,18 +62,45 @@ export class CourseController {
 
   async getCourse(req: AuthRequest, res: Response) {
     try {
-      const course = await courseService.getCourseById(req.params.id);
+      // Always use public view to sanitize data (removes video URLs)
+      const course = await courseService.getCourseById(req.params.id, true);
       
       let isEnrolled = false;
       if (req.user && req.user.purchasedCourses) {
         isEnrolled = req.user.purchasedCourses.includes(course._id.toString());
       }
       
-      const courseData = { ...course.toObject(), isEnrolled };
+      const courseData = { ...course, isEnrolled };
       
       ApiResponse.success(res, { course: courseData }, 'Course retrieved successfully');
     } catch (error: any) {
       ApiResponse.error(res, error.message, 404);
+    }
+  }
+
+  async getCourseContent(req: AuthRequest, res: Response) {
+    try {
+      if (!req.user) {
+        return ApiResponse.error(res, 'Authentication required', 401);
+      }
+
+      const course = await courseService.getCourseContent(
+        req.params.id,
+        req.user._id,
+        req.user.role
+      );
+      
+      let isEnrolled = false;
+      if (req.user.purchasedCourses) {
+        isEnrolled = req.user.purchasedCourses.includes(course._id.toString());
+      }
+      
+      const courseData = { ...course.toObject(), isEnrolled };
+      
+      ApiResponse.success(res, { course: courseData }, 'Course content retrieved successfully');
+    } catch (error: any) {
+      const statusCode = error.message.includes('enroll') ? 403 : 404;
+      ApiResponse.error(res, error.message, statusCode);
     }
   }
 
