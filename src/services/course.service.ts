@@ -104,4 +104,152 @@ export class CourseService {
     await course.save();
     return course;
   }
+
+  async updateModule(courseId: string, moduleId: string, moduleData: any, userId: string, userRole: string) {
+    const course = await Course.findById(courseId);
+    if (!course) {
+      throw new Error('Course not found');
+    }
+
+    if (userRole !== 'admin' && course.instructor.toString() !== userId) {
+      throw new Error('Not authorized to modify this course');
+    }
+
+    const module = course.modules.find((m: any) => m._id.toString() === moduleId);
+    if (!module) {
+      throw new Error('Module not found');
+    }
+
+    if (moduleData.title) module.title = moduleData.title;
+    if (moduleData.description !== undefined) module.description = moduleData.description;
+
+    await course.save();
+    return course;
+  }
+
+  async deleteModule(courseId: string, moduleId: string, userId: string, userRole: string) {
+    const course = await Course.findById(courseId);
+    if (!course) {
+      throw new Error('Course not found');
+    }
+
+    if (userRole !== 'admin' && course.instructor.toString() !== userId) {
+      throw new Error('Not authorized to modify this course');
+    }
+
+    const moduleIndex = course.modules.findIndex((m: any) => m._id.toString() === moduleId);
+    if (moduleIndex === -1) {
+      throw new Error('Module not found');
+    }
+
+    course.modules.splice(moduleIndex, 1);
+    await course.save();
+    return course;
+  }
+
+  async updateVideo(courseId: string, moduleId: string, videoId: string, videoData: any, userId: string, userRole: string) {
+    const course = await Course.findById(courseId);
+    if (!course) {
+      throw new Error('Course not found');
+    }
+
+    if (userRole !== 'admin' && course.instructor.toString() !== userId) {
+      throw new Error('Not authorized to modify this course');
+    }
+
+    const module = course.modules.find((m: any) => m._id.toString() === moduleId);
+    if (!module) {
+      throw new Error('Module not found');
+    }
+
+    const video = module.videos.find((v: any) => v._id.toString() === videoId);
+    if (!video) {
+      throw new Error('Video not found');
+    }
+
+    if (videoData.title) video.title = videoData.title;
+    if (videoData.videoUrl) video.videoUrl = videoData.videoUrl;
+    if (videoData.publicId) video.publicId = videoData.publicId;
+    if (videoData.description !== undefined) video.description = videoData.description;
+    if (videoData.duration) video.duration = videoData.duration;
+    if (videoData.isFreePreview !== undefined) video.isFreePreview = videoData.isFreePreview;
+    if (videoData.order) video.order = videoData.order;
+
+    await course.save();
+    return course;
+  }
+
+  async deleteVideo(courseId: string, moduleId: string, videoId: string, userId: string, userRole: string) {
+    const course = await Course.findById(courseId);
+    if (!course) {
+      throw new Error('Course not found');
+    }
+
+    if (userRole !== 'admin' && course.instructor.toString() !== userId) {
+      throw new Error('Not authorized to modify this course');
+    }
+
+    const module = course.modules.find((m: any) => m._id.toString() === moduleId);
+    if (!module) {
+      throw new Error('Module not found');
+    }
+
+    const videoIndex = module.videos.findIndex((v: any) => v._id.toString() === videoId);
+    if (videoIndex === -1) {
+      throw new Error('Video not found');
+    }
+
+    module.videos.splice(videoIndex, 1);
+    await course.save();
+    return course;
+  }
+
+  async reorderModules(courseId: string, moduleOrders: Array<{ moduleId: string; order: number }>, userId: string, userRole: string) {
+    const course = await Course.findById(courseId);
+    if (!course) {
+      throw new Error('Course not found');
+    }
+
+    if (userRole !== 'admin' && course.instructor.toString() !== userId) {
+      throw new Error('Not authorized to modify this course');
+    }
+
+    // Update order for each module
+    moduleOrders.forEach(({ moduleId, order }) => {
+      const module = course.modules.find((m: any) => m._id.toString() === moduleId);
+      if (module) {
+        module.order = order;
+      }
+    });
+
+    await course.save();
+    return course;
+  }
+
+  async reorderVideos(courseId: string, moduleId: string, videoOrders: Array<{ videoId: string; order: number }>, userId: string, userRole: string) {
+    const course = await Course.findById(courseId);
+    if (!course) {
+      throw new Error('Course not found');
+    }
+
+    if (userRole !== 'admin' && course.instructor.toString() !== userId) {
+      throw new Error('Not authorized to modify this course');
+    }
+
+    const module = course.modules.find((m: any) => m._id.toString() === moduleId);
+    if (!module) {
+      throw new Error('Module not found');
+    }
+
+    // Update order for each video
+    videoOrders.forEach(({ videoId, order }) => {
+      const video = module.videos.find((v: any) => v._id.toString() === videoId);
+      if (video) {
+        video.order = order;
+      }
+    });
+
+    await course.save();
+    return course;
+  }
 }

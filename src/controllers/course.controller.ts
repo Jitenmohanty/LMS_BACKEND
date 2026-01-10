@@ -115,4 +115,66 @@ export class CourseController {
       ApiResponse.error(res, error.message, 400);
     }
   }
+
+  async updateModule(req: AuthRequest, res: Response) {
+    try {
+      const { id, moduleId } = req.params;
+      const course = await courseService.updateModule(id, moduleId, req.body, req.user!._id, req.user!.role);
+      ApiResponse.success(res, { course }, 'Module updated successfully');
+    } catch (error: any) {
+      ApiResponse.error(res, error.message, 400);
+    }
+  }
+
+  async deleteModule(req: AuthRequest, res: Response) {
+    try {
+      const { id, moduleId } = req.params;
+      const course = await courseService.deleteModule(id, moduleId, req.user!._id, req.user!.role);
+      ApiResponse.success(res, { course }, 'Module deleted successfully');
+    } catch (error: any) {
+      ApiResponse.error(res, error.message, 400);
+    }
+  }
+
+  async updateVideo(req: AuthRequest, res: Response) {
+    try {
+      const { id, moduleId, videoId } = req.params;
+      const course = await courseService.updateVideo(id, moduleId, videoId, req.body, req.user!._id, req.user!.role);
+      ApiResponse.success(res, { course }, 'Video updated successfully');
+    } catch (error: any) {
+      ApiResponse.error(res, error.message, 400);
+    }
+  }
+
+  async deleteVideo(req: AuthRequest, res: Response) {
+    try {
+      const { id, moduleId, videoId } = req.params;
+      const course = await courseService.deleteVideo(id, moduleId, videoId, req.user!._id, req.user!.role);
+      ApiResponse.success(res, { course }, 'Video deleted successfully');
+    } catch (error: any) {
+      ApiResponse.error(res, error.message, 400);
+    }
+  }
+
+  async reorderModules(req: AuthRequest, res: Response) {
+    try {
+      const { id } = req.params;
+      const { moduleOrders } = req.body;
+      const course = await courseService.reorderModules(id, moduleOrders, req.user!._id, req.user!.role);
+      ApiResponse.success(res, { course }, 'Modules reordered successfully');
+    } catch (error: any) {
+      ApiResponse.error(res, error.message, 400);
+    }
+  }
+
+  async reorderVideos(req: AuthRequest, res: Response) {
+    try {
+      const { id, moduleId } = req.params;
+      const { videoOrders } = req.body;
+      const course = await courseService.reorderVideos(id, moduleId, videoOrders, req.user!._id, req.user!.role);
+      ApiResponse.success(res, { course }, 'Videos reordered successfully');
+    } catch (error: any) {
+      ApiResponse.error(res, error.message, 400);
+    }
+  }
 }

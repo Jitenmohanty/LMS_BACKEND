@@ -8,12 +8,14 @@ export interface IVideo {
   videoUrl: string;
   publicId: string;
   duration: number;
+  description?: string;
   isFreePreview: boolean;
   order: number;
 }
 
 export interface IModule {
   title: string;
+  description?: string;
   order: number;
   videos: IVideo[];
 }
@@ -44,12 +46,14 @@ const videoSchema = new Schema<IVideo>({
   videoUrl: { type: String, required: true },
   publicId: { type: String, required: true },
   duration: { type: Number, required: true },
+  description: { type: String },
   isFreePreview: { type: Boolean, default: false },
   order: { type: Number, required: true }
 });
 
 const moduleSchema = new Schema<IModule>({
   title: { type: String, required: true },
+  description: { type: String },
   order: { type: Number, required: true },
   videos: [videoSchema]
 });
