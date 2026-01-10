@@ -1,27 +1,34 @@
-import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
 import { getOtpTemplate } from '../templates/auth/otp.template';
 import { getContactAdminTemplate } from '../templates/contact/admin-notification.template';
 import { getContactUserAckTemplate } from '../templates/contact/user-ack.template';
 import { getPasswordChangedTemplate } from '../templates/auth/password-changed.template';
 
 export class EmailService {
-  private resend;
+  private transporter;
 
   constructor() {
-    this.resend = new Resend(process.env.RESEND_API_KEY);
+    // Create Gmail SMTP transporter
+    this.transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_APP_PASSWORD,
+      },
+    });
   }
 
   async sendPasswordChangeNotification(email: string, name: string) {
     const html = getPasswordChangedTemplate(name);
 
     try {
-      if (!process.env.RESEND_API_KEY) {
-        console.warn('RESEND_API_KEY missing. Logging password change email for:', email);
+      if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
+        console.warn('Gmail credentials missing. Logging password change email for:', email);
         return;
       }
 
-      await this.resend.emails.send({
-        from: 'Security <security@resend.dev>',
+      await this.transporter.sendMail({
+        from: `"Security" <${process.env.GMAIL_USER}>`,
         to: email,
         subject: 'Your Password Has Been Changed',
         html: html,
@@ -40,18 +47,18 @@ export class EmailService {
     const html = getOtpTemplate(otp, type);
 
     try {
-      if (!process.env.RESEND_API_KEY) {
-        console.warn('RESEND_API_KEY missing. Logging OTP instead:', otp);
+      if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
+        console.warn('Gmail credentials missing. Logging OTP instead:', otp);
         return; // Dev mode fallback
       }
 
-      await this.resend.emails.send({
-        from: 'Learning Platform <onboarding@resend.dev>', // Default Resend testing domain
+      await this.transporter.sendMail({
+        from: `"Learning Platform" <${process.env.GMAIL_USER}>`,
         to: email,
         subject: subject,
         html: html,
       });
-      console.log(`Email sent to ${email} via Resend`);
+      console.log(`Email sent to ${email} via Nodemailer`);
     } catch (error) {
       console.error('Error sending email:', error);
       // In production, you might want to throw this, but for now log it
@@ -65,13 +72,14 @@ export class EmailService {
     const html = getContactAdminTemplate(firstName, lastName, email, subject, message);
 
     try {
-      if (!process.env.RESEND_API_KEY) {
-        console.warn('RESEND_API_KEY missing. Logging contact email instead:', data);
+      if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
+        console.warn('Gmail credentials missing. Logging contact email instead:', data);
         return;
       }
 
-      await this.resend.emails.send({
-        from: 'Contact Form <contact@resend.dev>', // Should be a verified domain in production
+      // Send email to admin
+      await this.transporter.sendMail({
+        from: `"Contact Form" <${process.env.GMAIL_USER}>`,
         to: adminEmail,
         replyTo: email,
         subject: `New Contact Submission: ${subject}`,
@@ -81,8 +89,8 @@ export class EmailService {
       // Send auto-reply to user
       const userHtml = getContactUserAckTemplate(firstName, subject);
 
-      await this.resend.emails.send({
-        from: 'DevSkill Support <support@resend.dev>',
+      await this.transporter.sendMail({
+        from: `"DevSkill Support" <${process.env.GMAIL_USER}>`,
         to: email,
         subject: 'We received your message',
         html: userHtml
@@ -95,4 +103,5 @@ export class EmailService {
     }
   }
 }
+
 
